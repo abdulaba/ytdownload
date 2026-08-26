@@ -33,6 +33,8 @@ button:disabled { opacity: .55; cursor: wait; transform: none; }
 .log-error .log-message { color: #ff8199; }
 .log-success .log-message { color: #76ddb2; }
 .error { margin: 18px 0 0; padding: 14px; white-space: pre-line; color: #ff9aae; background: #4b14204d; border-radius: 12px; }
-.legal { margin: 28px 0 0; color: #696979; font-size: 12px; text-align: center; }
+.legal { margin: 28px 0 0; color: #777786; font-size: 12px; line-height: 1.55; text-align: left; }
+.legal summary { text-align: center; cursor: pointer; }
+.legal p { margin: 12px 0 0; }
 [hidden] { display: none !important; }
 @media (max-width: 720px) { .card { padding: 30px 22px; } .input-row { flex-direction: column; } button { width: 100%; } }

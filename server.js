@@ -5,6 +5,7 @@ const { spawn } = require('child_process');
 const { randomUUID } = require('crypto');
 
 const PORT = Number(process.env.PORT) || 4173;
+const HOST = process.env.HOST || '127.0.0.1';
 const INACTIVITY_TIMEOUT_MS = Number(process.env.YTDLP_TIMEOUT_MS) || 120_000;
 const COOKIES_BROWSER = process.env.YTDLP_COOKIES_BROWSER || '';
 const PUBLIC_DIR = path.join(__dirname, 'public');
@@ -261,6 +262,6 @@ const server = http.createServer(async (req, res) => {
   });
 });
 
-server.listen(PORT, () => {
-  console.log(`YT Downloader disponible en http://localhost:${PORT}`);
+server.listen(PORT, HOST, () => {
+  console.log(`YT Downloader disponible en http://${HOST}:${PORT}`);
 });
