@@ -33,3 +33,5 @@ YTDLP_TIMEOUT_MS=300000 npm start
 Los archivos generados se guardan también en `downloads/`. Usa la herramienta únicamente con contenido propio o que tengas autorización para descargar.
 
 Durante cada descarga, la interfaz muestra un registro detallado de la salida de `yt-dlp`. Se conservan las 300 entradas más recientes del trabajo actual; el historial se reinicia al reiniciar el servidor.
+
+Al finalizar un trabajo, el servidor elimina automáticamente sus segmentos `.part`, metadatos `.ytdl` y archivos intermedios. Si la descarga termina correctamente, conserva únicamente el MP4 final.

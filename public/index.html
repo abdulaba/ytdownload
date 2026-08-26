@@ -18,6 +18,7 @@
       <div class="input-row">
         <input id="url" name="url" type="url" placeholder="https://www.youtube.com/watch?v=…" required autocomplete="off">
         <button type="submit">Descargar</button>
+        <button id="clear-button" class="secondary-button" type="button">Limpiar</button>
       </div>
     </form>
 
@@ -27,7 +28,7 @@
         <span id="percent">0%</span>
       </div>
       <div class="progress"><div id="progress-bar"></div></div>
-      <a id="file-link" class="download-link" hidden>Guardar archivo MP4</a>
+      <a id="file-link" class="download-link" hidden>Guardar otra copia en Descargas</a>
       <details class="log-panel" open>
         <summary>Registro de actividad <span id="log-count">0</span></summary>
         <div id="activity-log" class="activity-log" role="log" aria-live="polite"></div>

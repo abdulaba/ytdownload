@@ -48,6 +48,20 @@ function readBody(req) {
   });
 }
 
+function cleanupJobArtifacts(id, keepFile = null) {
+  let removed = 0;
+  for (const name of fs.readdirSync(DOWNLOAD_DIR)) {
+    if (!name.startsWith(`${id}-`) || name === keepFile) continue;
+    try {
+      fs.unlinkSync(path.join(DOWNLOAD_DIR, name));
+      removed += 1;
+    } catch (error) {
+      console.warn(`No se pudo eliminar el temporal ${name}: ${error.message}`);
+    }
+  }
+  return removed;
+}
+
 function startDownload(url) {
   const id = randomUUID();
   const outputTemplate = path.join(DOWNLOAD_DIR, `${id}-%(title).120B.%(ext)s`);
@@ -156,7 +170,11 @@ function startDownload(url) {
         processLine(streamBuffers[source]);
       }
     }
-    if (timedOut) return;
+    if (timedOut) {
+      const removed = cleanupJobArtifacts(id);
+      if (removed) addLog('info', `Se eliminaron ${removed} archivo(s) temporal(es).`);
+      return;
+    }
     if (code !== 0) {
       job.status = 'error';
       const output = errorOutput.trim();
@@ -172,6 +190,8 @@ function startDownload(url) {
         job.error = output.split('\n').filter(Boolean).slice(-3).join('\n') || `yt-dlp terminó con código ${code}`;
       }
       addLog('error', job.error);
+      const removed = cleanupJobArtifacts(id);
+      if (removed) addLog('info', `Se eliminaron ${removed} archivo(s) temporal(es).`);
       return;
     }
     const file = fs.readdirSync(DOWNLOAD_DIR).find(name => name.startsWith(`${id}-`) && name.endsWith('.mp4'));
@@ -183,8 +203,10 @@ function startDownload(url) {
     }
     job.status = 'done';
     job.progress = 100;
-    job.message = '¡Descarga lista!';
+    job.message = '¡Listo! El archivo está guardado en la carpeta downloads.';
     job.file = file;
+    const removed = cleanupJobArtifacts(id, file);
+    if (removed) addLog('info', `Se eliminaron ${removed} archivo(s) temporal(es).`);
     addLog('success', `Archivo listo: ${file.replace(`${job.id}-`, '')}`);
   });
 

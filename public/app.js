@@ -1,6 +1,7 @@
 const form = document.querySelector('#download-form');
 const input = document.querySelector('#url');
 const button = form.querySelector('button');
+const clearButton = document.querySelector('#clear-button');
 const statusBox = document.querySelector('#status');
 const statusText = document.querySelector('#status-text');
 const percent = document.querySelector('#percent');
@@ -15,6 +16,7 @@ const wait = ms => new Promise(resolve => setTimeout(resolve, ms));
 form.addEventListener('submit', async event => {
   event.preventDefault();
   button.disabled = true;
+  clearButton.disabled = true;
   errorBox.hidden = true;
   fileLink.hidden = true;
   activityLog.replaceChildren();
@@ -35,7 +37,19 @@ form.addEventListener('submit', async event => {
     showError(error.message);
   } finally {
     button.disabled = false;
+    clearButton.disabled = false;
   }
+});
+
+clearButton.addEventListener('click', () => {
+  form.reset();
+  statusBox.hidden = true;
+  errorBox.hidden = true;
+  fileLink.hidden = true;
+  activityLog.replaceChildren();
+  logCount.textContent = '0';
+  updateProgress('Preparando…', 0);
+  input.focus();
 });
 
 async function trackJob(id) {

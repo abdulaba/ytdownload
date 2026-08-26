@@ -16,6 +16,8 @@ input:focus { border-color: #ff4267; box-shadow: 0 0 0 3px #ff426722; }
 button, .download-link { padding: 16px 22px; border: 0; border-radius: 13px; color: white; background: #ed2652; font: inherit; font-weight: 800; cursor: pointer; transition: transform .15s, background .15s; }
 button:hover, .download-link:hover { transform: translateY(-1px); background: #ff3862; }
 button:disabled { opacity: .55; cursor: wait; transform: none; }
+.secondary-button { color: #c7c7d2; background: #292936; }
+.secondary-button:hover { background: #383849; }
 .status { margin-top: 26px; padding: 18px; border-radius: 14px; background: #0d0d16; border: 1px solid #292937; }
 .status-line { display: flex; justify-content: space-between; gap: 16px; margin-bottom: 12px; color: #d8d8e2; font-size: 14px; }
 .progress { height: 8px; overflow: hidden; border-radius: 10px; background: #292936; }
@@ -33,4 +35,4 @@ button:disabled { opacity: .55; cursor: wait; transform: none; }
 .error { margin: 18px 0 0; padding: 14px; white-space: pre-line; color: #ff9aae; background: #4b14204d; border-radius: 12px; }
 .legal { margin: 28px 0 0; color: #696979; font-size: 12px; text-align: center; }
 [hidden] { display: none !important; }
-@media (max-width: 620px) { .card { padding: 30px 22px; } .input-row { flex-direction: column; } button { width: 100%; } }
+@media (max-width: 720px) { .card { padding: 30px 22px; } .input-row { flex-direction: column; } button { width: 100%; } }
