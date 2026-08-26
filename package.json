@@ -1,0 +1,12 @@
+{
+  "name": "yt-dlp-web",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Interfaz web local para yt-dlp",
+  "scripts": {
+    "start": "node server.js"
+  },
+  "engines": {
+    "node": ">=18"
+  }
+}

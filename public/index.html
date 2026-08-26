@@ -1,0 +1,41 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>YT Downloader</title>
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <main class="card">
+    <div class="icon" aria-hidden="true">▶</div>
+    <p class="eyebrow">YT-DLP WEB</p>
+    <h1>Descarga en máxima calidad</h1>
+    <p class="description">Pega un enlace de YouTube. El video y el audio se descargarán en la mejor calidad disponible y se combinarán en MP4.</p>
+
+    <form id="download-form">
+      <label for="url">URL del video</label>
+      <div class="input-row">
+        <input id="url" name="url" type="url" placeholder="https://www.youtube.com/watch?v=…" required autocomplete="off">
+        <button type="submit">Descargar</button>
+      </div>
+    </form>
+
+    <section id="status" class="status" hidden aria-live="polite">
+      <div class="status-line">
+        <span id="status-text">Preparando…</span>
+        <span id="percent">0%</span>
+      </div>
+      <div class="progress"><div id="progress-bar"></div></div>
+      <a id="file-link" class="download-link" hidden>Guardar archivo MP4</a>
+      <details class="log-panel" open>
+        <summary>Registro de actividad <span id="log-count">0</span></summary>
+        <div id="activity-log" class="activity-log" role="log" aria-live="polite"></div>
+      </details>
+    </section>
+    <p id="error" class="error" hidden></p>
+    <p class="legal">Descarga únicamente contenido propio o para el que tengas permiso.</p>
+  </main>
+  <script src="app.js"></script>
+</body>
+</html>
