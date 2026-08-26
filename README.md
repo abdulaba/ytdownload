@@ -36,6 +36,8 @@ Durante cada descarga, la interfaz muestra un registro detallado de la salida de
 
 Al finalizar un trabajo, el servidor elimina automáticamente sus segmentos `.part`, metadatos `.ytdl` y archivos intermedios. Si la descarga termina correctamente, conserva únicamente el MP4 final.
 
+La aplicación registra el ID único de cada video en `downloads/.download-index.json`. Si se ingresa nuevamente el mismo video mediante otra variante de su URL, reutiliza el MP4 existente en vez de descargarlo otra vez. Si el archivo se elimina manualmente, el índice se corrige en la siguiente consulta.
+
 ## Uso responsable y aviso legal
 
 Esta herramienta se proporciona exclusivamente para usos legítimos, incluyendo la descarga de contenido propio, autorizado, de dominio público, publicado bajo una licencia compatible o cuya descarga esté permitida por la legislación aplicable.

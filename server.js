@@ -10,9 +10,16 @@ const INACTIVITY_TIMEOUT_MS = Number(process.env.YTDLP_TIMEOUT_MS) || 120_000;
 const COOKIES_BROWSER = process.env.YTDLP_COOKIES_BROWSER || '';
 const PUBLIC_DIR = path.join(__dirname, 'public');
 const DOWNLOAD_DIR = path.join(__dirname, 'downloads');
+const DOWNLOAD_INDEX_FILE = path.join(DOWNLOAD_DIR, '.download-index.json');
 const jobs = new Map();
 
 fs.mkdirSync(DOWNLOAD_DIR, { recursive: true });
+let downloadIndex = {};
+try {
+  downloadIndex = JSON.parse(fs.readFileSync(DOWNLOAD_INDEX_FILE, 'utf8'));
+} catch {
+  downloadIndex = {};
+}
 
 const mimeTypes = {
   '.html': 'text/html; charset=utf-8',
@@ -25,14 +32,55 @@ function json(res, status, data) {
   res.end(JSON.stringify(data));
 }
 
-function validYouTubeUrl(value) {
+function getYouTubeVideoId(value) {
   try {
     const url = new URL(value);
     const host = url.hostname.toLowerCase().replace(/^www\./, '');
-    return url.protocol === 'https:' && ['youtube.com', 'youtu.be', 'm.youtube.com', 'music.youtube.com'].includes(host);
+    if (url.protocol !== 'https:' || !['youtube.com', 'youtu.be', 'm.youtube.com', 'music.youtube.com'].includes(host)) return null;
+    let id = null;
+    if (host === 'youtu.be') id = url.pathname.split('/').filter(Boolean)[0];
+    else if (url.pathname === '/watch') id = url.searchParams.get('v');
+    else {
+      const match = url.pathname.match(/^\/(?:shorts|embed|live)\/([^/?]+)/);
+      if (match) id = match[1];
+    }
+    return /^[A-Za-z0-9_-]{11}$/.test(id || '') ? id : null;
   } catch {
-    return false;
+    return null;
   }
+}
+
+function saveDownloadIndex() {
+  const temporaryFile = `${DOWNLOAD_INDEX_FILE}.tmp`;
+  fs.writeFileSync(temporaryFile, JSON.stringify(downloadIndex, null, 2));
+  fs.renameSync(temporaryFile, DOWNLOAD_INDEX_FILE);
+}
+
+function findExistingDownload(videoId) {
+  for (const job of jobs.values()) {
+    if (job.videoId !== videoId || job.status === 'error') continue;
+    if (job.status !== 'done') return job;
+    if (job.file && fs.existsSync(path.join(DOWNLOAD_DIR, job.file))) return job;
+  }
+
+  const entry = downloadIndex[videoId];
+  if (!entry || !entry.file || !fs.existsSync(path.join(DOWNLOAD_DIR, entry.file))) {
+    if (entry) {
+      delete downloadIndex[videoId];
+      saveDownloadIndex();
+    }
+    return null;
+  }
+
+  const id = randomUUID();
+  const job = {
+    id, videoId, status: 'done', progress: 100,
+    message: 'Este video ya estaba descargado. Se usará el archivo existente.',
+    file: entry.file, error: null,
+    logs: [{ time: new Date().toISOString(), level: 'success', message: `Archivo existente: ${entry.file.replace(/^[a-f0-9-]+-/, '')}` }],
+  };
+  jobs.set(id, job);
+  return job;
 }
 
 function readBody(req) {
@@ -63,10 +111,10 @@ function cleanupJobArtifacts(id, keepFile = null) {
   return removed;
 }
 
-function startDownload(url) {
+function startDownload(url, videoId) {
   const id = randomUUID();
-  const outputTemplate = path.join(DOWNLOAD_DIR, `${id}-%(title).120B.%(ext)s`);
-  const job = { id, status: 'starting', progress: 0, message: 'Preparando descarga…', file: null, error: null, logs: [] };
+  const outputTemplate = path.join(DOWNLOAD_DIR, `${id}-%(id)s-%(title).120B.%(ext)s`);
+  const job = { id, videoId, status: 'starting', progress: 0, message: 'Preparando descarga…', file: null, error: null, logs: [] };
   jobs.set(id, job);
 
   const addLog = (level, message) => {
@@ -206,6 +254,8 @@ function startDownload(url) {
     job.progress = 100;
     job.message = '¡Listo! El archivo está guardado en la carpeta downloads.';
     job.file = file;
+    downloadIndex[videoId] = { file, url, downloadedAt: new Date().toISOString() };
+    saveDownloadIndex();
     const removed = cleanupJobArtifacts(id, file);
     if (removed) addLog('info', `Se eliminaron ${removed} archivo(s) temporal(es).`);
     addLog('success', `Archivo listo: ${file.replace(`${job.id}-`, '')}`);
@@ -220,9 +270,12 @@ const server = http.createServer(async (req, res) => {
   if (req.method === 'POST' && requestUrl.pathname === '/api/download') {
     try {
       const { url } = await readBody(req);
-      if (!validYouTubeUrl(url)) return json(res, 400, { error: 'Ingresa una URL válida de YouTube.' });
-      const job = startDownload(url);
-      return json(res, 202, { id: job.id });
+      const videoId = getYouTubeVideoId(url);
+      if (!videoId) return json(res, 400, { error: 'Ingresa una URL válida de un video de YouTube.' });
+      const existingJob = findExistingDownload(videoId);
+      if (existingJob) return json(res, 200, { id: existingJob.id, existing: true });
+      const job = startDownload(url, videoId);
+      return json(res, 202, { id: job.id, existing: false });
     } catch (error) {
       return json(res, 400, { error: error.message });
     }
@@ -241,10 +294,11 @@ const server = http.createServer(async (req, res) => {
     if (!job || job.status !== 'done' || !job.file) return json(res, 404, { error: 'Archivo no disponible.' });
     const filePath = path.join(DOWNLOAD_DIR, job.file);
     const stat = fs.statSync(filePath);
+    const downloadName = job.file.replace(/^[a-f0-9-]{36}-/, '');
     res.writeHead(200, {
       'Content-Type': 'video/mp4',
       'Content-Length': stat.size,
-      'Content-Disposition': `attachment; filename="${job.file.replace(`${job.id}-`, '')}"`,
+      'Content-Disposition': `attachment; filename="${downloadName}"`,
     });
     return fs.createReadStream(filePath).pipe(res);
   }
